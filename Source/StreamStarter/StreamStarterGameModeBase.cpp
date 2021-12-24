@@ -114,7 +114,29 @@ void AStreamStarterGameModeBase::ParseMessage(FString msg)
 void AStreamStarterGameModeBase::ReceivedChatMessage(FString UserName, FString message)
 {
 	UE_LOG(LogTemp, Warning, TEXT("%s: %s"), *UserName, *message);
+	recentMessage = message;
+
+	UE_LOG(LogTemp, Warning, TEXT("Checking countdown state."));
+	if(inCountdownState)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("In Countdown State"));
+		
+		if(message.StartsWith("!"))
+		{
+			OnCommandMessage();
+		}
+		else
+		{
+			OnChatMessage();
+		}
+	}
 }
+
+FString AStreamStarterGameModeBase::getRecentMessage()
+{
+	return recentMessage;
+}
+
 
 bool AStreamStarterGameModeBase::ConnectToTwitch()
 {
@@ -155,14 +177,12 @@ bool AStreamStarterGameModeBase::ConnectToTwitch()
 		
 		return false;
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Connected successfully!"));
+	
+	UE_LOG(LogTemp, Warning, TEXT("Connected successfully!"));
 
-		GetWorldTimerManager().SetTimer(timerHandle, this, &AStreamStarterGameModeBase::ReceivedData, 0.05f, true);
-		this->ListenerSocket = fSocket;
-		return true;
-	}
+	GetWorldTimerManager().SetTimer(timerHandle, this, &AStreamStarterGameModeBase::ReceivedData, 0.05f, true);
+	this->ListenerSocket = fSocket;
+	return true;
 }
 
 
@@ -196,3 +216,50 @@ bool AStreamStarterGameModeBase::SendString(FString msg)
 		return false;
 	}
 }
+
+// ------------------------------------------------------------------------
+
+void AStreamStarterGameModeBase::setCountdownSeconds(int Seconds)
+{
+	TimeLeft = Seconds;
+}
+
+float AStreamStarterGameModeBase::getTimeLeft()
+{
+	return TimeLeft;
+}
+
+
+void AStreamStarterGameModeBase::startCountdown()
+{
+	inCountdownState = true;
+	GetWorldTimerManager().SetTimer(CountdownTimerHandle, this, &AStreamStarterGameModeBase::Countdown, 0.001f, true);
+}
+
+void AStreamStarterGameModeBase::Countdown()
+{
+	TimeLeft -= .001f;
+	
+	CountdownChange();
+
+	if(TimeLeft == 10)
+	{
+		StopEmotes();
+	}
+	else if(TimeLeft <= 0)
+	{
+		StopCountdown();
+	}
+}
+
+void AStreamStarterGameModeBase::StopCountdown()
+{
+	inCountdownState = false;
+	
+	GetWorldTimerManager().ClearTimer(CountdownTimerHandle);
+
+	CountdownFinished();
+}
+
+
+
