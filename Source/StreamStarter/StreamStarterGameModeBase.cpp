@@ -4,6 +4,9 @@
 
 #include <string>
 
+#include "Sockets.h"
+#include "SocketSubsystem.h"
+
 void AStreamStarterGameModeBase::sendTwitchLogin(FString oauth, FString twitchName)
 {
 	this->OAuth = oauth;
@@ -197,7 +200,12 @@ void AStreamStarterGameModeBase::LoginToTwitch()
 
 void AStreamStarterGameModeBase::JoinChannel()
 {
-	SendString("JOIN #" + this->Channel);
+	bool joinedChannel = SendString("JOIN #" + this->Channel);
+
+	if(joinedChannel)
+	{
+		SendString("PRIVMSG #" + this->Channel + " :If you're seeing this message, Stream Starter has connected successfully!");
+	}
 }
 
 

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Networking.h"
+
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 
@@ -64,7 +64,7 @@ private:
 
 	FString recentMessage;
 
-	float TimeLeft = 120;
+	float TimeLeft;
 
 	bool loggedInSuccessfully;
 
